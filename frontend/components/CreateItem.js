@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Mutation } from "react-apollo";
 import gql from "graphql-tag";
-import Router from "next/router"
+import Router from "next/router";
 import Form from "./styles/Form";
 import formatMoney from "../lib/formatMoney";
 import Error from "./ErrorMessage";
@@ -42,26 +42,59 @@ class CreateItem extends Component {
     this.setState({ [name]: e.target.value });
   };
 
+  uploadFile = async e => {
+    const files = e.target.files;
+    const data = new FormData();
+    data.append("file", files[0]);
+    data.append("upload_preset", "sickfits");
+
+    const res = await fetch(
+      "https://res.cloudinary.com/dlt89rgyb/image/upload/",
+      {
+        method: "POST",
+        body: data
+      }
+    );
+    const file = await res.json();
+    console.log(file);
+    this.setState({
+      image: file.secure_url,
+      largeImage: file.eager[0].secure_url
+    });
+  };
+
   render() {
     return (
       <Mutation mutation={CREATE_ITEM_MUTATION} variables={this.state}>
         {(createItem, { loading, error }) => (
           <Form
-            onSubmit={ async e => {
-                // Stop form from submiting 
+            onSubmit={async e => {
+              // Stop form from submiting
               e.preventDefault();
-                // call the mutation 
+              // call the mutation
               const res = await createItem();
-               // change them to the single item page 
-              console.log(res)
+              // change them to the single item page
+              console.log(res);
               Router.push({
-                  pathname: '/item',
-                  query: { id: res.data.createItem.id }
-              })
+                pathname: "/item",
+                query: { id: res.data.createItem.id }
+              });
             }}
           >
             <Error error={error} />
             <fieldset disabled={loading} aria-busy={loading}>
+              <label htmlFor="file">
+                Image
+                <input
+                  type="file"
+                  id="file"
+                  name="file"
+                  placeholder="Upload an image"
+                  required
+                  onChange={this.uploadFile}
+                />
+              </label>
+
               <label htmlFor="title">
                 Title
                 <input

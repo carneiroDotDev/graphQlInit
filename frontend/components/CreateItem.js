@@ -5,7 +5,6 @@ import Router from "next/router";
 import Form from "./styles/Form";
 import formatMoney from "../lib/formatMoney";
 import Error from "./ErrorMessage";
-import { roundToNearestMinutes } from "date-fns/esm";
 
 const CREATE_ITEM_MUTATION = gql`
   mutation CREATE_ITEM_MUTATION(
@@ -49,18 +48,21 @@ class CreateItem extends Component {
     data.append("upload_preset", "sickfits");
 
     const res = await fetch(
-      "https://res.cloudinary.com/dlt89rgyb/image/upload/",
+      "https://api.cloudinary.com/v1_1/dlt89rgyb/image/upload/",
       {
         method: "POST",
         body: data
       }
     );
     const file = await res.json();
-    console.log(file);
+    if(!file.error){
+    console.log('file -',file);
+    console.log(file.eager[0].secure_url)
     this.setState({
       image: file.secure_url,
-      largeImage: file.eager[0].secure_url
+      largeImage: file.eager[0].secure_url,
     });
+  };
   };
 
   render() {
@@ -93,6 +95,9 @@ class CreateItem extends Component {
                   required
                   onChange={this.uploadFile}
                 />
+                {this.state.image && (
+                  <img width="200" src={this.state.image} alt="Upload Preview" />
+                )}
               </label>
 
               <label htmlFor="title">
